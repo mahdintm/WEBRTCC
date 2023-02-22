@@ -21,7 +21,7 @@ export default {
   plugins: [],
   components: true,
   buildModules: [],
-  modules: ['bootstrap-vue/nuxt', '@nuxtjs/pwa'],
+  modules: ['@nuxtjs/tailwindcss','@nuxtjs/pwa'],
   pwa: {
     manifest: {
       lang: 'en',

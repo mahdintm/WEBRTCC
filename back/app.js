@@ -7,7 +7,7 @@ const CodeGenerator = require("node-code-generator");
 var generator = new CodeGenerator();
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.90.150:3000"],
+    origin: ["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.87.36:3000/"],
   },
 });
 async function GenerateCode(length) {
