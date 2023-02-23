@@ -1,6 +1,8 @@
 <template>
   <div>
-    <div class="header bg-gradient-to-r from-blue-600 to-blue-300 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80">
+    <div
+      class="header bg-gradient-to-r from-blue-600 to-blue-300 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80"
+    >
       دوربینو<br /><span class="roomST"
         >شناسه اتاق: <span id="roomid">{{ code }}</span>
       </span>
@@ -18,7 +20,8 @@
     <div class="input">
       <label for="camera">دوربین</label>
       <select
-        style="width: 70%; margin-left: 10%" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        style="width: 70%; margin-left: 10%"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         id="camera"
         v-model="selectedCamera"
       >
@@ -34,7 +37,8 @@
     <div class="input">
       <label for="camera">میکروفون</label>
       <select
-        style="width: 70%; margin-left: 10%" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        style="width: 70%; margin-left: 10%"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         id="camera"
         v-model="selectedMicrophone"
       >
@@ -47,16 +51,18 @@
         </option>
       </select>
     </div>
-    <button onclick="leave()" class="btn text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2">
-  <span class="btn2 ">
-      خروج
-  </span>
-</button>
+    <button
+      onclick="leave()"
+      class="btn text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2"
+    >
+      <span class="btn2"> خروج </span>
+    </button>
     <!-- <div class="btn" onclick="leave()">خروج</div> -->
   </div>
 </template>
 
 <script>
+import socket from '~/plugins/socket.io.js'
 export default {
   data() {
     return {
@@ -66,9 +72,24 @@ export default {
       microphones: [],
       selectedMicrophone: null,
       code: new URLSearchParams(window.location.search).get('roomID'),
+      peerConnection: null,
+      peerConnection2: null,
+      peerConnection3: null,
+      peerConnection4: null,
+      peers: [
+        { user: null, RTC: this.peerConnection },
+        { user: null, RTC: this.peerConnection },
+        { user: null, RTC: this.peerConnection },
+        { user: null, RTC: this.peerConnection },
+      ],
     }
   },
   mounted() {
+    const { RTCPeerConnection, RTCSessionDescription } = window
+    this.peerConnection = new RTCPeerConnection()
+    this.peerConnection2 = new RTCPeerConnection()
+    this.peerConnection3 = new RTCPeerConnection()
+    this.peerConnection4 = new RTCPeerConnection()
     navigator.mediaDevices
       .enumerateDevices()
       .then((devices) => {
@@ -89,13 +110,39 @@ export default {
   },
   watch: {
     selectedCamera(newCamera) {
-      // this.startVideo(newCamera)
+      this.startVideo(newCamera)
     },
     selectedMicrophone(newCamera) {
-      // this.startVideo(newCamera)
+      this.startVideo(newCamera)
     },
   },
   methods: {
+    async makecall(userid) {
+      const { RTCPeerConnection, RTCSessionDescription } = window
+      let b = 0
+      let a = setInterval(async () => {
+        b++
+        for await (const [index, element] of this.peers.entries()) {
+          if (element.user == userid) {
+            const offer = await element.RTC.createOffer()
+            await element.RTC.setLocalDescription(
+              new RTCSessionDescription(offer)
+            )
+            return socket.emit('call-user', { offer, to: userid })
+          } else if (element.user == null) {
+            this.peers[index]['user'] = userid
+            const offer = await element.RTC.createOffer()
+            await element.RTC.setLocalDescription(
+              new RTCSessionDescription(offer)
+            )
+            return socket.emit('call-user', { offer, to: userid })
+          }
+        }
+        if (b == 2) {
+          clearInterval(a)
+        }
+      }, 1000)
+    },
     async startVideo(deviceId) {
       const constraints = {
         audio: {
@@ -109,7 +156,19 @@ export default {
       try {
         const stream = await navigator.mediaDevices.getUserMedia(constraints)
         this.videoStream = stream
-        this.$refs.video.srcObject = stream
+        this.$refs.video.srcObject = this.videoStream
+        stream
+          .getTracks()
+          .forEach((track) => this.peerConnection.addTrack(track, stream))
+        stream
+          .getTracks()
+          .forEach((track) => this.peerConnection2.addTrack(track, stream))
+        stream
+          .getTracks()
+          .forEach((track) => this.peerConnection3.addTrack(track, stream))
+        stream
+          .getTracks()
+          .forEach((track) => this.peerConnection4.addTrack(track, stream))
       } catch (error) {
         console.error('Error starting video stream:', error)
       }
@@ -127,12 +186,13 @@ export default {
 video {
   width: 100%;
   height: 100%;
+  border-radius: 15px;
 }
 @font-face {
   font-family: IRANSans;
   src: url('~/static/fonts/IRANSans.ttf');
 }
-label{
+label {
   color: #ffffff;
 }
 :root {
@@ -153,7 +213,7 @@ body {
   padding: 0;
   margin: 0;
   font-family: IRANSans !important;
-  background-color:#252b38;
+  background-color: #252b38;
 }
 .local-video {
   width: 90%;

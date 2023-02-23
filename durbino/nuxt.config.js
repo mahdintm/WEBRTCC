@@ -1,8 +1,4 @@
 export default {
-  server: {
-    host: '0.0.0.0',
-    port: '3000', // optional
-  },
   ssr: false,
   head: {
     title: 'دوربینو',
@@ -21,7 +17,7 @@ export default {
   plugins: [],
   components: true,
   buildModules: [],
-  modules: ['@nuxtjs/tailwindcss','@nuxtjs/pwa'],
+  modules: ['@nuxtjs/tailwindcss', '@nuxtjs/pwa'],
   pwa: {
     manifest: {
       lang: 'en',
