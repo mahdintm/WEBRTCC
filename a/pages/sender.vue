@@ -79,6 +79,7 @@ export default {
       peerConnection4: null,
       ScreenStream: null,
       peers: [],
+      users: 0,
     }
   },
   mounted() {
@@ -91,21 +92,44 @@ export default {
       window.location.href = code
     })
     socket.on('newUser', this.makecall)
+    socket.on('ConnectTOScreen', this.callScreen)
     socket.on('answer-made', async (data) => {
       console.log('answer-made')
       for await (const [index, element] of this.peers.entries()) {
         if (element.user == data.id) {
-          return await element.RTC.setRemoteDescription(
+          return await element.RTC.camera.setRemoteDescription(
+            new RTCSessionDescription(data.answer)
+          )
+        }
+      }
+    })
+    socket.on('screen-answer-made', async (data) => {
+      console.log('screen-answer-made')
+      for await (const [index, element] of this.peers.entries()) {
+        if (element.user == data.id) {
+          return await element.RTC.screen.setRemoteDescription(
             new RTCSessionDescription(data.answer)
           )
         }
       }
     })
     const { RTCPeerConnection, RTCSessionDescription } = window
-    this.peerConnection = new RTCPeerConnection()
-    this.peerConnection2 = new RTCPeerConnection()
-    this.peerConnection3 = new RTCPeerConnection()
-    this.peerConnection4 = new RTCPeerConnection()
+    this.peerConnection = {
+      camera: new RTCPeerConnection(),
+      screen: new RTCPeerConnection(),
+    }
+    this.peerConnection2 = {
+      camera: new RTCPeerConnection(),
+      screen: new RTCPeerConnection(),
+    }
+    this.peerConnection3 = {
+      camera: new RTCPeerConnection(),
+      screen: new RTCPeerConnection(),
+    }
+    this.peerConnection4 = {
+      camera: new RTCPeerConnection(),
+      screen: new RTCPeerConnection(),
+    }
     this.peers.push(
       { user: null, RTC: this.peerConnection },
       { user: null, RTC: this.peerConnection2 },
@@ -154,6 +178,26 @@ export default {
         })
         this.ScreenStream = stream
         this.$refs.ScreenStream.srcObject = this.ScreenStream
+        stream
+          .getTracks()
+          .forEach((track) =>
+            this.peerConnection.screen.addTrack(track, stream)
+          )
+        stream
+          .getTracks()
+          .forEach((track) =>
+            this.peerConnection2.screen.addTrack(track, stream)
+          )
+        stream
+          .getTracks()
+          .forEach((track) =>
+            this.peerConnection3.screen.addTrack(track, stream)
+          )
+        stream
+          .getTracks()
+          .forEach((track) =>
+            this.peerConnection4.screen.addTrack(track, stream)
+          )
         socket.emit('enableShareScreen')
       } catch (error) {
         console.log(error)
@@ -169,18 +213,45 @@ export default {
         }
         for (const [index, element] of this.peers.entries()) {
           if (element.user == userid) {
-            const offer = await element.RTC.createOffer()
-            await element.RTC.setLocalDescription(
+            const offer = await element.RTC.camera.createOffer()
+            await element.RTC.camera.setLocalDescription(
               new RTCSessionDescription(offer)
             )
             return socket.emit('call-user', { offer, to: userid })
           } else if (element.user == null) {
+            this.users++
             this.peers[index]['user'] = userid
-            const offer = await element.RTC.createOffer()
-            await element.RTC.setLocalDescription(
+            const offer = await element.RTC.camera.createOffer()
+            await element.RTC.camera.setLocalDescription(
               new RTCSessionDescription(offer)
             )
             return socket.emit('call-user', { offer, to: userid })
+          }
+        }
+      }, 1000)
+    },
+    async callScreen(userid) {
+      const { RTCPeerConnection, RTCSessionDescription } = window
+      let b = 0
+      let a = setInterval(async () => {
+        b++
+        if (b > 2) {
+          return clearInterval(a)
+        }
+        for (const [index, element] of this.peers.entries()) {
+          if (element.user == userid) {
+            const offer = await element.RTC.screen.createOffer()
+            await element.RTC.screen.setLocalDescription(
+              new RTCSessionDescription(offer)
+            )
+            return socket.emit('screen-call-user', { offer, to: userid })
+          } else if (element.user == null) {
+            this.peers[index]['user'] = userid
+            const offer = await element.RTC.screen.createOffer()
+            await element.RTC.screen.setLocalDescription(
+              new RTCSessionDescription(offer)
+            )
+            return socket.emit('screen-call-user', { offer, to: userid })
           }
         }
       }, 1000)
@@ -201,16 +272,24 @@ export default {
         this.$refs.video.srcObject = this.videoStream
         stream
           .getTracks()
-          .forEach((track) => this.peerConnection.addTrack(track, stream))
+          .forEach((track) =>
+            this.peerConnection.camera.addTrack(track, stream)
+          )
         stream
           .getTracks()
-          .forEach((track) => this.peerConnection2.addTrack(track, stream))
+          .forEach((track) =>
+            this.peerConnection2.camera.addTrack(track, stream)
+          )
         stream
           .getTracks()
-          .forEach((track) => this.peerConnection3.addTrack(track, stream))
+          .forEach((track) =>
+            this.peerConnection3.camera.addTrack(track, stream)
+          )
         stream
           .getTracks()
-          .forEach((track) => this.peerConnection4.addTrack(track, stream))
+          .forEach((track) =>
+            this.peerConnection4.camera.addTrack(track, stream)
+          )
       } catch (error) {
         console.error('Error starting video stream:', error)
       }

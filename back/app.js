@@ -19,7 +19,6 @@ async function GenerateCode(length) {
   return generator.generateCodes(pattern, 1, { alphanumericRegex: /\*(?!\+)/g });
 }
 io.on("connection", (socket) => {
-  console.log(socket.id);
   socket.on("disconnect", async (reason, a, b) => {
     for await (const [index, element] of rooms.entries()) {
       var index_ = rooms[index]["users"].indexOf(socket.id);
@@ -35,9 +34,9 @@ io.on("connection", (socket) => {
   socket.on("enableShareScreen", async () => {
     for await (const [index, element] of rooms.entries()) {
       if (element.Streamer == socket.id) {
-        rooms.ShareScreen = true;
+        rooms[index].ShareScreen = true;
         element.users.forEach((element___) => {
-          io.to(element___).emit("enableUserShareScreen", { RoomID: element.roomID });
+          io.to(element.Streamer).emit("ConnectTOScreen", element___);
         });
       }
     }
@@ -45,7 +44,7 @@ io.on("connection", (socket) => {
   socket.on("disableShareScreen", async () => {
     for await (const [index, element] of rooms.entries()) {
       if (element.Streamer == socket.id) {
-        rooms.ShareScreen = false;
+        rooms[index].ShareScreen = false;
         element.users.forEach((element___) => {
           io.to(element___).emit("disableUserShareScreen", { RoomID: element.roomID });
         });
@@ -70,21 +69,36 @@ io.on("connection", (socket) => {
     io.to(socket.id).emit("TakeRoomId", roomid[0]);
     rooms.push({ roomID: roomid[0], Streamer: socket.id, ShareScreen: false, users: [] });
   });
-  socket.on("call-user", (data) => {
-    socket.on("call-user", async (data) => {
-      for await (const [index, element] of rooms.entries()) {
-        if (element.Streamer == socket.id) {
-          io.to(data.to).emit("call-made", {
-            offer: data.offer,
-            room: element.roomID,
-            socket: socket.id,
-          });
-        }
+  socket.on("call-user", async (data) => {
+    for await (const [index, element] of rooms.entries()) {
+      if (element.Streamer == socket.id) {
+        io.to(data.to).emit("call-made", {
+          offer: data.offer,
+          room: element.roomID,
+          socket: socket.id,
+        });
       }
-    });
+    }
+  });
+  socket.on("screen-call-user", async (data) => {
+    for await (const [index, element] of rooms.entries()) {
+      if (element.Streamer == socket.id) {
+        io.to(data.to).emit("screen-call-made", {
+          offer: data.offer,
+          room: element.roomID,
+          socket: socket.id,
+        });
+      }
+    }
   });
   socket.on("make-answer", (data) => {
     io.to(data.to).emit("answer-made", {
+      id: socket.id,
+      answer: data.answer,
+    });
+  });
+  socket.on("screen-make-answer", (data) => {
+    io.to(data.to).emit("screen-answer-made", {
       id: socket.id,
       answer: data.answer,
     });
@@ -105,11 +119,11 @@ io.on("connection", (socket) => {
             console.log(element.Streamer);
             // io.to(socket.id).emit("SucsessValidationRoom");
             io.to(element.Streamer).emit("newUser", socket.id);
+            if (element.ShareScreen) {
+              io.to(element.Streamer).emit("ConnectTOScreen", socket.id);
+            }
           }
         }
-
-        rooms[index]["users"].push(socket.id);
-        // io.to(element.Streamer).emit("newUser", socket.id);
       } else if (rooms.length == index + 1) {
         return io.to(socket.id).emit("errorValidationRoom");
       }
