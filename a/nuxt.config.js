@@ -7,20 +7,20 @@ export default {
   },
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'durbin',
+    title: 'دوربینو',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: '' },
       { name: 'format-detection', content: 'telephone=no' },
     ],
-    link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+    link: [{ rel: 'icon', type: 'image/x-icon', href: '/icon.png' }],
   },
   env: {
-    WS_URL: 'http://127.0.0.1:3002',
-    server_URL: 'http://127.0.0.1:3002',
-    // WS_URL: 'https://behnam2.irangame.ir',
-    // server_URL: 'https://behnam2.irangame.ir',
+    // WS_URL: 'http://127.0.0.1:3002',
+    // server_URL: 'http://127.0.0.1:3002',
+    WS_URL: 'https://behnam2.irangame.ir',
+    server_URL: 'https://behnam2.irangame.ir',
     BrandName: 'دوربینو',
   },
   // Global CSS: https://go.nuxtjs.dev/config-css
@@ -52,9 +52,11 @@ export default {
   ],
   // PWA module configuration: https://go.nuxtjs.dev/pwa
   pwa: {
+    icon: { fileName: 'icon.png' },
     manifest: {
-      lang: 'en',
+      lang: 'fa',
     },
+    title: 'دوربینو',
   },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
