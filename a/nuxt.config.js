@@ -1,7 +1,10 @@
 export default {
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
   ssr: false,
-
+  server: {
+    host: '0.0.0.0',
+    port: '3000', // optional
+  },
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: 'durbin',
@@ -14,7 +17,11 @@ export default {
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
   },
   env: {
-    WS_URL: 'https://behnam.irangame.ir',
+    WS_URL: 'http://127.0.0.1:3002',
+    server_URL: 'http://127.0.0.1:3002',
+    // WS_URL: 'https://behnam2.irangame.ir',
+    // server_URL: 'https://behnam2.irangame.ir',
+    BrandName: 'دوربینو',
   },
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [],
@@ -26,7 +33,15 @@ export default {
   components: true,
 
   // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
-  buildModules: [],
+  buildModules: ['@nuxtjs/fontawesome'],
+  fontawesome: {
+    component: 'fa',
+    suffix: true,
+    icons: {
+      solid: true,
+      brands: true,
+    },
+  },
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [

@@ -41,7 +41,9 @@
     <b-row>
       <div class="topBar_Chat">
         <div class="Brandbar">
-          <span @click="exit" id="menuBTN"><fa-icon icon="arrow-left" /></span>
+          <span @click="$router.go(-1)" id="menuBTN"
+            ><fa-icon icon="arrow-left"
+          /></span>
           <div class="chatInfo">
             <div
               style="
@@ -93,9 +95,9 @@
         </div>
       </div>
     </b-row>
-    <!-- <b-button @click="$bvModal.show('bv-modal-AddRoom')" class="addItem"
+    <b-button @click="$bvModal.show('bv-modal-AddRoom')" class="addItem"
       >+</b-button
-    > -->
+    >
   </b-container>
 </template>
 <script>
@@ -107,38 +109,69 @@ export default {
       dismissCountDown: 0,
       errorText: '',
       roomid: '',
-      rooms: [{ id: 0, user: null, webcam: true }],
+      rooms: [
+        { id: 0, user: null, webcam: false, screenshare: false },
+        { id: 1, user: null, webcam: false, screenshare: false },
+        { id: 2, user: null, webcam: false, screenshare: false },
+        { id: 3, user: null, webcam: false, screenshare: false },
+      ],
+      ScreenStream: null,
       peerConnection: null,
+      peerConnection2: null,
+      peerConnection3: null,
+      peerConnection4: null,
       peers: [],
     }
   },
-  beforeDestroy() {
-    if (this.videoStream) {
-      this.videoStream.getTracks().forEach((track) => track.stop())
-    }
-    socket.off('offer_send')
-    socket.off('errorEnterRoom')
-    socket.off('errorEnterRoom')
-    socket.off('errorValidationRoom')
-    socket.off('redirect_')
-    socket.off('RedirectToAPP')
-  },
   mounted() {
-    const { RTCPeerConnection, RTCSessionDescription } = window
-    setTimeout(() => {
-      socket.emit('validation_room', this.$route.query.id)
-    }, 3000)
     this.$root.$emit('CheckSystem')
-    socket.on('RedirectToAPP', async (data) => {
-      await this.$router.push(`/`)
+    socket.on('RedirectToAPP', (data) => {
+      this.$router.push(`/app`)
     })
-    socket.on('redirect_', async (data) => {
-      this.peerConnection.close()
-      await this.$router.push(`/`)
+    socket.on('redirect_', (data) => {
+      this.$router.push(`/`)
     })
-    this.peerConnection = new RTCPeerConnection()
-    this.peerConnection.ontrack = function ({ streams: [stream] }) {
+    const { RTCPeerConnection, RTCSessionDescription } = window
+    this.peerConnection = {
+      camera: new RTCPeerConnection(),
+      screen: new RTCPeerConnection(),
+    }
+    this.peerConnection2 = {
+      camera: new RTCPeerConnection(),
+      screen: new RTCPeerConnection(),
+    }
+    this.peerConnection3 = {
+      camera: new RTCPeerConnection(),
+      screen: new RTCPeerConnection(),
+    }
+    this.peerConnection4 = {
+      camera: new RTCPeerConnection(),
+      screen: new RTCPeerConnection(),
+    }
+    this.peers.push(
+      { user: null, RTC: this.peerConnection },
+      { user: null, RTC: this.peerConnection2 },
+      { user: null, RTC: this.peerConnection3 },
+      { user: null, RTC: this.peerConnection4 }
+    )
+    this.peerConnection.camera.ontrack = function ({ streams: [stream] }) {
       const remoteVideo = document.getElementById('remote-video_0')
+      remoteVideo.srcObject = stream
+    }
+    this.peerConnection.screen.ontrack = function ({ streams: [stream] }) {
+      const remoteVideo = document.getElementById('screen-video_0')
+      remoteVideo.srcObject = stream
+    }
+    this.peerConnection2.camera.ontrack = function ({ streams: [stream] }) {
+      const remoteVideo = document.getElementById('remote-video_1')
+      remoteVideo.srcObject = stream
+    }
+    this.peerConnection3.camera.ontrack = function ({ streams: [stream] }) {
+      const remoteVideo = document.getElementById('remote-video_2')
+      remoteVideo.srcObject = stream
+    }
+    this.peerConnection4.camera.ontrack = function ({ streams: [stream] }) {
+      const remoteVideo = document.getElementById('remote-video_3')
       remoteVideo.srcObject = stream
     }
     socket.on('errorValidationRoom', () => {
@@ -146,23 +179,68 @@ export default {
       this.errorText = 'کد اتاق اشتباه است'
       this.showAlert()
     })
+    socket.on('disableUserShareScreen', () => {})
     socket.on('errorEnterRoom', () => {
       console.log('slm')
       this.errorText = 'شما در این اتاق هستید!'
       this.showAlert()
     })
-    socket.on('offer_send', (data) => {
-      console.log('offer_send')
-      this.peerConnection.setRemoteDescription(
-        new RTCSessionDescription(data.offer)
-      )
-      this.peerConnection.createAnswer().then((answer) => {
-        this.peerConnection.setLocalDescription(answer)
-        return socket.emit('make-answer', {
-          answer,
-          to: data.socket,
-        })
-      })
+    socket.on('call-made', async (data) => {
+      console.log('call-made')
+
+      for (const [index, element] of this.peers.entries()) {
+        if (element.user == data.socket) {
+          console.log('in1', index)
+          this.peers[index]['user'] = data.socket
+          await element.RTC.camera.setRemoteDescription(
+            new RTCSessionDescription(data.offer)
+          )
+          const answer = await element.RTC.camera.createAnswer()
+          await element.RTC.camera.setLocalDescription(
+            new RTCSessionDescription(answer)
+          )
+          return socket.emit('make-answer', {
+            answer,
+            to: data.socket,
+          })
+        } else if (element.user == null) {
+          console.log('in2', index)
+          this.rooms[index].webcam = true
+          this.peers[index]['user'] = data.socket
+          await element.RTC.camera.setRemoteDescription(
+            new RTCSessionDescription(data.offer)
+          )
+          const answer = await element.RTC.camera.createAnswer()
+          await element.RTC.camera.setLocalDescription(
+            new RTCSessionDescription(answer)
+          )
+          return socket.emit('make-answer', {
+            answer,
+            to: data.socket,
+          })
+        }
+      }
+    })
+    socket.on('screen-call-made', async (data) => {
+      console.log('screen-call-made')
+      for (const [index, element] of this.peers.entries()) {
+        if (element.user == data.socket) {
+          this.rooms[index].screenshare = true
+          console.log('scin1', index)
+          this.peers[index]['user'] = data.socket
+          await element.RTC.screen.setRemoteDescription(
+            new RTCSessionDescription(data.offer)
+          )
+          const answer = await element.RTC.screen.createAnswer()
+          await element.RTC.screen.setLocalDescription(
+            new RTCSessionDescription(answer)
+          )
+          return socket.emit('screen-make-answer', {
+            answer,
+            to: data.socket,
+          })
+        }
+      }
     })
   },
   methods: {
@@ -175,10 +253,8 @@ export default {
     sub() {
       this.rooms.push({ code: null, webcam: true, screenshare: true })
     },
-    validateroom() {},
-    exit() {
-      socket.emit('ExitViewer')
-      this.$router.go(-1)
+    validateroom() {
+      socket.emit('validation_room', this.roomid)
     },
   },
 }
