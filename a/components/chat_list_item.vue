@@ -20,7 +20,7 @@ export default {
   data() {
     return {
       register_COUNT: {},
-      default_no_photo: `${process.env.server_URL}/private/img/no-photo.png`,
+      default_no_photo: `${process.env.server_URL}/private/profile.png`,
     }
   },
   name: 'chat_list_item',
