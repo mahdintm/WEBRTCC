@@ -17,18 +17,15 @@
     "@nuxtjs/fontawesome": "^1.1.2",
     "@nuxtjs/pwa": "^3.3.5",
     "bootstrap": "^4.6.2",
-    "bootstrap-css-only": "^4.4.1",
     "bootstrap-vue": "^2.22.0",
     "core-js": "^3.25.3",
-    "javascript-time-ago": "^2.5.9",
-    "mdb-vue-ui-kit": "^3.2.0",
-    "mdbvue": "^6.7.3",
     "nuxt": "^2.15.8",
-    "nuxt-socket-io": "^2.0.3",
-    "socket.io-client": "^4.6.1",
     "vue": "^2.7.10",
     "vue-server-renderer": "^2.7.10",
-    "vue-template-compiler": "^2.7.10"
+    "vue-template-compiler": "^2.7.10",
+    "socket.io-client": "^4.6.1",
+    "javascript-time-ago": "^2.5.9"
+
   },
   "devDependencies": {
     "eslint-config-prettier": "^8.5.0",

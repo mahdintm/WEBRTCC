@@ -34,7 +34,7 @@
         </b-row>
         <b-row class="my-1 row__">
           <b-col sm="4">
-            <label for="input-valid"> دوربین</label>
+            <label for="input-valid"> میکروفون</label>
           </b-col>
           <select
             style="width: 60%; color: black !important"
@@ -71,8 +71,8 @@
       </div>
       <div class="FillterBar">
         <nuxt-link :to="`/app`" class="item">گفتگوها</nuxt-link>
-        <nuxt-link class="item" :to="`/app3`"><span>بیسیم</span></nuxt-link>
-        <span class="item selected">اتاق ها</span>
+        <span class="item selected">بیسیم</span>
+        <nuxt-link class="item" :to="`/app2`"><span>اتاق ها</span></nuxt-link>
       </div>
     </div>
     <div>
@@ -100,6 +100,25 @@
               />
             </b-row>
           </div>
+          <b-row class="my-1 row__">
+            <b-col sm="4">
+              <label for="input-valid"> میکروفون</label>
+            </b-col>
+            <select
+              style="width: 60%; color: black !important"
+              id="camera"
+              v-model="valid_Mic"
+            >
+              <option
+                v-for="camera in cameras"
+                :key="camera.deviceId"
+                :value="{ deviceId: camera.deviceId, label: camera.label }"
+                style="color: black !important"
+              >
+                {{ camera.label || `Camera` }}
+              </option>
+            </select>
+          </b-row>
           <b-button
             :disabled="!valid_Password ? true : false"
             style="background-color: #2c6eff"
@@ -127,20 +146,6 @@
         </div>
       </div>
     </div>
-    <!-- <b-container class="bv-example-row">
-      <b-row>
-        <b-col class="buttons">
-          <b-button
-            style="background-color: #2c6eff"
-            @click="$router.push('/sender?id=1')"
-            >ورود به اتاق</b-button
-          >
-          <b-button style="margin-top: 3%; background-color: #2c6eff"
-            >ساخت اتاق</b-button
-          >
-        </b-col>
-      </b-row>
-    </b-container> -->
     <div @click="$bvModal.show('bv-modal-CreateRoom')" class="addChat">
       <fa-icon icon="plus" />
     </div>
@@ -153,6 +158,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import socket from '~/plugins/socket.io.js'
+
 export default {
   name: 'App',
   data() {
@@ -161,6 +167,7 @@ export default {
       cameras: [],
       RoomsList: [],
       valid_Password: '',
+      valid_Mic: '',
     }
   },
   computed: {
@@ -169,14 +176,14 @@ export default {
   components: {},
   async mounted() {
     this.$root.$emit('CheckSystem')
-    socket.emit('GetAllRooms__')
-    socket.on('GetAllRooms', (data) => {
+    socket.emit('GetAllRooms__Mic')
+    socket.on('GetAllRooms_Mic', (data) => {
       this.RoomsList = data
     })
     navigator.mediaDevices
       .enumerateDevices()
       .then((devices) => {
-        const cameras = devices.filter((device) => device.kind === 'videoinput')
+        const cameras = devices.filter((device) => device.kind === 'audioinput')
         this.cameras = cameras
         if (cameras.length > 0) {
           this.NEW.selectedCamera = {
@@ -188,26 +195,26 @@ export default {
       .catch((error) => {
         console.error('Error getting camera list:', error)
       })
-    socket.on('Create_GotoRoom', (data) => {
-      this.$router.push(`/sender?cam=${data.camera}&id=${data.id}`)
+    socket.on('Create_GotoRoom_Bisim', (data) => {
+      this.$router.push(`/bisim?mic=${data.mic}&id=${data.id}`)
     })
     socket.on('RedirectToAPP', (data) => {
       this.$router.push(`/app`)
     })
-    socket.on('GotoRoom', (data) => {
-      this.$router.push(`/viewer?id=${data}`)
+    socket.on('GotoRoom_Bisim', (data) => {
+      this.$router.push(`/bisim?mic=${data.mic}&id=${data.id}`)
     })
   },
   methods: {
     async Createroom() {
-      socket.emit('CreateRoom', {
+      socket.emit('CreateRoom_Bisim', {
         Name: this.NEW.RoomName,
         Password: this.NEW.Password,
-        selectedCamera: this.NEW.selectedCamera,
+        selectedMic: this.NEW.selectedCamera,
       })
     },
     async enterRoom(roomid) {
-      socket.emit('EnterRoom', roomid, this.valid_Password)
+      socket.emit('EnterRoom_Mic', roomid, this.valid_Password, this.valid_Mic)
     },
   },
 }

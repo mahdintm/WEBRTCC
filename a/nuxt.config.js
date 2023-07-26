@@ -1,10 +1,10 @@
 export default {
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
   ssr: false,
-  server: {
-    host: '0.0.0.0',
-    port: '3000', // optional
-  },
+  // server: {
+  //   // host: '0.0.0.0',
+  //   port: '3000', // optional
+  // },
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: 'دوربینو',
@@ -17,11 +17,19 @@ export default {
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/icon.png' }],
   },
   env: {
-    // WS_URL: 'http://127.0.0.1:3002',
-    // server_URL: 'http://127.0.0.1:3002',
-    WS_URL: 'https://behnam2.irangame.ir',
-    server_URL: 'https://behnam2.irangame.ir',
+    WS_URL: 'http://localhost:3002',
+    server_URL: 'http://localhost:3002',
+    // WS_URL: 'https://172.17.160.101:3002',
+    // server_URL: 'https://172.17.160.101:3002',
     BrandName: 'دوربینو',
+  },
+  fontawesome: {
+    component: 'fa',
+    suffix: true,
+    icons: {
+      solid: true,
+      brands: true,
+    },
   },
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [],
@@ -34,14 +42,6 @@ export default {
 
   // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
   buildModules: ['@nuxtjs/fontawesome'],
-  fontawesome: {
-    component: 'fa',
-    suffix: true,
-    icons: {
-      solid: true,
-      brands: true,
-    },
-  },
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
@@ -50,13 +50,12 @@ export default {
     // https://go.nuxtjs.dev/pwa
     '@nuxtjs/pwa',
   ],
+
   // PWA module configuration: https://go.nuxtjs.dev/pwa
   pwa: {
-    icon: { fileName: 'icon.png' },
     manifest: {
-      lang: 'fa',
+      lang: 'en',
     },
-    title: 'دوربینو',
   },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build

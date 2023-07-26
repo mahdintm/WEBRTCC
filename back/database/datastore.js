@@ -105,9 +105,19 @@ export class Data_App {
         return `${process.env.ServerUrl}/private/profile.png`;
       }
     },
+    async create(data) {
+      let datanew = await sql(`INSERT INTO Users( username, password, acl) VALUES ("${data.username}","${data.password}","${data.acl.id}") `);
+      console.log(datanew);
+      const [userRows] = await Promise.all([sql(`SELECT * FROM Users where id = ${datanew.insertId}`)]);
+      for await (const [index, user] of userRows.entries()) {
+        userRows[index].name = await JSON.parse(user.name);
+      }
+      console.log(userRows);
+    },
     async getName(userId) {
       try {
         const user = await Data_App.users.find((user) => user.id === parseInt(userId));
+        // console.log(user);
         let name = user.name;
         return name.firstName || name.lastName !== null ? (name.firstName && name.lastName !== null ? `${name.firstName} ${name.lastName}` : name.firstName !== null ? name.firstName : name.lastName) : await Data_App.Users.getUserName(user.id);
       } catch (error) {
@@ -159,6 +169,22 @@ export class Data_App {
           return null;
         }
         return userRow.id;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async GetAll() {
+      try {
+        return await Data_App.users;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async isAdmin(userId) {
+      try {
+        const userRow = Data_App.users.find((user) => user.id === userId);
+        console.log(userRow);
+        return userRow.acl == 1 ? true : false;
       } catch (error) {
         console.log(error);
       }

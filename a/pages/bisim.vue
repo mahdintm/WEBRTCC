@@ -101,15 +101,23 @@
         margin-right: 5%;
       "
     >
-      <div>
-        <video
-          ref="video"
-          autoplay
-          class="camera"
-          playsinline
-          muted
-          :srcObject="videoStream"
-        ></video>
+      <div style="height: 40vh; width: 80%"></div>
+      <div style="height: 30vh; width: 60vw">
+        <button
+          :class="activemic ? 'btn___ activemic' : 'btn___'"
+          @click="activemic = !activemic"
+          style="
+            margin-top: 2%;
+            border-radius: 100%;
+            width: 100%;
+            height: 100%;
+            background-color: transparent !important;
+            border: none;
+            font-size: 15vh;
+          "
+        >
+          <fa-icon icon="microphone" />
+        </button>
       </div>
       <div class="btns">
         <b-button @click="Exit" class="btn__" style="margin-top: 2%"
@@ -137,6 +145,7 @@ export default {
       Lock_Finger: true,
       Clock: '00:00',
       DateNow: 'Wed, March 8',
+      activemic: false,
     }
   },
   mounted() {
@@ -176,7 +185,7 @@ export default {
       this.Lock_Finger = false
     },
     async Exit() {
-      socket.emit('deleteRoom')
+      socket.emit('deleteRoom_Mic')
     },
     async makecall(userid) {
       const { RTCPeerConnection, RTCSessionDescription } = window
@@ -214,10 +223,6 @@ export default {
       try {
         const constraints = {
           audio: true,
-          video: {
-            facingMode: 'environment',
-            deviceId: { exact: this.$route.query.cam },
-          },
         }
         const stream = await navigator.mediaDevices.getUserMedia(constraints)
         await this.setvideoStream(stream)
@@ -227,7 +232,6 @@ export default {
     },
     async setvideoStream(stream) {
       this.videoStream = stream
-      this.$refs.video.srcObject = this.videoStream
     },
   },
   beforeDestroy() {
@@ -243,6 +247,14 @@ export default {
 </script>
 
 <style>
+.btn___ {
+  color: white;
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+.activemic {
+  color: red !important;
+}
 .alwaysOnDisplay {
   display: flex;
   flex-direction: column;

@@ -1,26 +1,12 @@
 <template>
   <div>
-    <div class="topBar">
-      <div class="Brandbar">
-        <span v-b-toggle.sidebar-backdrop id="menuBTN"
-          ><fa-icon icon="bars"
-        /></span>
-        <span id="brandName">{{ BrandName }}</span>
-        <span id="SearchBTN"><fa-icon icon="magnifying-glass" /></span>
-      </div>
-      <div class="FillterBar">
-        <span class="item selected">گفتگوها</span>
-        <nuxt-link class="item" :to="`/app3`"><span>بیسیم</span></nuxt-link>
-        <nuxt-link class="item" :to="`/app2`"><span>اتاق ها</span></nuxt-link>
-      </div>
-    </div>
     <Nuxt />
-    <div class="addChat">
-      <fa-icon icon="pen" />
+    <div @click="$bvModal.show('bv-modal-CreateUser')" class="addChat">
+      <fa-icon icon="plus" />
     </div>
     <b-sidebar id="sidebar-backdrop" backdrop-variant="dark" backdrop shadow>
-      <nuxt-link v-if="isAdmin" class="item" :to="`/admin`">
-        <div class="px-2 py-2">پنل ادمین</div>
+      <nuxt-link class="item" :to="`/app`">
+        <div class="px-2 py-2">پنل عادی</div>
       </nuxt-link>
       <nuxt-link class="item" :to="`/logout`">
         <div class="px-2 py-2">خروج</div>
@@ -39,7 +25,6 @@ export default {
   data() {
     return {
       CheckSystem: false,
-      isAdmin: false,
     }
   },
   computed: {
@@ -48,10 +33,6 @@ export default {
   async created() {
     this.$root.$on('ChatList_GetChats', async () => {
       if (this.$store.state.userid != null) {
-        socket.emit('_getStateAdmin', this.$store.state.userid)
-        socket.on('getStateAdmin', (state) => {
-          this.isAdmin = state
-        })
         return socket.emit('getAllChats', this.$store.state.userid)
       } else {
         await fetch(`${process.env.server_URL}/AccountManager/GetStatus`, {
@@ -62,10 +43,6 @@ export default {
           if (!response.auth) {
             await this.$router.push('/login')
           }
-          socket.emit('_getStateAdmin', this.$store.state.userid)
-          socket.on('getStateAdmin', (state) => {
-            this.isAdmin = state
-          })
           this.UpdateUserID(response.id)
           socket.emit('SetSocketID', this.$store.state.userid)
           return socket.emit('getAllChats', this.$store.state.userid)

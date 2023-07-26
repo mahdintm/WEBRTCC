@@ -10,6 +10,7 @@ const config = process.env;
 
 AccountManager.post("/login", async (req, res) => {
   try {
+    console.log(1);
     const { username, password, device } = req.body;
     if (!username || !password) return res.status(401).send({ status: false });
     const user_SQL = (await sql(`select * from Users where username="${username}"`))[0];

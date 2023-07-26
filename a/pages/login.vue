@@ -58,6 +58,7 @@ export default {
   methods: {
     ...mapActions(['UpdateUserID']),
     async SingIn() {
+      console.log(process.env.server_URL)
       await fetch(`${process.env.server_URL}/AccountManager/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -69,6 +70,7 @@ export default {
         }),
       }).then(async (res) => {
         let respo = await res.json()
+        console.log(respo)
         if (respo.status) {
           this.UpdateUserID(respo.id)
           await this.$router.push('/app')
